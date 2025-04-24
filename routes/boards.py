@@ -31,7 +31,7 @@ def get_user_boards(username):
     conn = sqlite3.connect('Users.db')
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute('''SELECT user_boards.id, user_boards.mac_address, user_boards.board_name, user_boards.is_in_use 
+    c.execute('''SELECT user_boards.id, user_boards.mac_address, user_boards.board_name 
                  FROM user_boards 
                  INNER JOIN users ON user_boards.user_id = users.id 
                  WHERE users.username = ? 

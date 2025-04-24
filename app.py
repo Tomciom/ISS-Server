@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from routes import home, journey_history,latest_journey, login, register, new_journey, journey_details, boards
 import config, sqlite3
 import sqlite3
+from flask_cors import CORS
 
 
 def create_journeys():
@@ -72,15 +73,13 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT NOT NULL UNIQUE,
-                    password TEXT NOT NULL,
-                    pin VARCHAR(6))''')
+                    password TEXT NOT NULL)''')
     
     c.execute('''CREATE TABLE IF NOT EXISTS user_boards (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
                     mac_address TEXT NOT NULL,
                     board_name TEXT,
-                    is_in_use INTEGER DEFAULT 0 NOT NULL,
                     FOREIGN KEY (user_id) REFERENCES users (id))''')
     
     
@@ -100,27 +99,14 @@ def save_mac_to_db(username, mac_address):
         raise ValueError(f"User with username '{username}' not found.")
     user_id = result[0]
 
-
-    cur_users.execute("SELECT user_id FROM user_boards WHERE mac_address = ?", (mac_address,))
-    existing_rows = cur_users.fetchall()
-    remove_journeys = False
-    for (existing_user_id,) in existing_rows:
-        if existing_user_id != user_id:
-            remove_journeys = True
-            break
-
-    cur_users.execute(
-        "DELETE FROM user_boards WHERE mac_address = ?",
-        (mac_address,)
-    )
-    conn_users.commit()
-
     cur_users.execute(
         "INSERT INTO user_boards (user_id, mac_address) VALUES (?, ?)",
         (user_id, mac_address)
     )
     conn_users.commit()
     conn_users.close()
+
+    remove_journeys = False
 
     if remove_journeys:
         conn_journeys = sqlite3.connect('journeys.db')
@@ -170,6 +156,7 @@ def send_mac():
 def create_app():
     app = Flask(__name__)
     app.config.from_object('config.Config')
+    CORS(app)
 
     app.register_blueprint(boards.bp)
     app.register_blueprint(home.bp)
@@ -182,7 +169,15 @@ def create_app():
 
     app.add_url_rule('/send_mac', view_func=send_mac, methods=['POST'])
     
-
+    @app.route('/<username>/add_device/<mac_address>', methods=['GET'])
+    def add_device(username, mac_address):
+        try:
+            save_mac_to_db(username, mac_address)
+            return jsonify({
+                'message': f'Device {mac_address} successfully added to user {username}'
+            }), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 400
 
     return app
 
