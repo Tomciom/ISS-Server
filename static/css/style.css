@@ -1,0 +1,89 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f8f9fa;
+    padding: 20px;
+}
+
+h1 {
+    color: #333;
+}
+
+form {
+    margin: 20px auto;
+    width: 300px;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    box-sizing: border-box;
+}
+
+button {
+    margin: 10px 0;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+.password-container {
+    position: relative;
+}
+
+.password-container input {
+    padding-right: 40px; 
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    padding: 2px;
+}
+
+.requirement {
+    font-size: 14px;
+    margin: 5px 0;
+}
+
+.requirement.valid {
+    color: green;
+}
+
+.requirement.invalid {
+    color: red;
+}
+
+button {
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+.messages {
+    list-style: none;
+    padding: 0;
+    margin: 10px auto;
+    width: 300px;
+    color: red;
+    font-weight: bold;
+    text-align: left;
+}
+
+.messages li {
+    margin-bottom: 5px;
+}
+
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.req-icon {
+    width: 20px;
+    height: 20px;
+    padding: 2px;
+}

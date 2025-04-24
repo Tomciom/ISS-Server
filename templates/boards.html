@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Płytki Użytkownika</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f8f9fa;
+            padding: 20px;
+            display: flex;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        p {
+            font-size: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        form {
+            margin: 20px;
+        }
+
+        button {
+            margin: 10px 0;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        
+
+        .sidebar {
+            width: 200px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 90vh;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        .sidebar a {
+            text-decoration: none;
+            color: #333;
+            padding: 10px 0;
+            margin: 5px 0;
+            display: block;
+            font-size: 16px;
+        }
+        .sidebar a:hover {
+            background-color: #ddd;
+            border-radius: 5px;
+        }
+
+        .content {
+            padding: 20px;
+            padding: 20px;
+            justify-content: center;
+            margin: auto;
+            align-items: center;
+            width: 85%;
+            width: 85%;
+        }
+        
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        table th {
+            background-color: #f4f4f4;
+        }
+
+        button {
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button.delete {
+            background-color: #dc3545;
+        }
+
+        form {
+            display: inline;
+        }
+
+        button.reset {
+            background-color: #28a745;
+        }
+
+        button.reset:hover {
+            background-color: #1e7e34;
+        }
+
+    </style>
+</head>
+<body>
+    {% if username %}
+        <div class="sidebar">
+            <div>
+                <a href="{{ url_for('home.home') }}">Strona Główna</a>
+                <a href="{{ url_for('boards.boards', username=username) }}">Twoje Urządzenia</a>
+                <a href="{{ url_for('current_journey.current_journey')}}">Ostatnia Podróż</a>
+                <a href="{{ url_for('new_journey.new_journey') }}">Nowa Podróż</a>
+                <a href="{{ url_for('journey_history.journey_history') }}">Historia Podróży</a>
+            </div>
+        <a href="{{ url_for('login.logout') }}">Wyloguj</a>
+        </div> 
+        <div class="content">
+            <h1>Płytki Użytkownika</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nazwa Płytki</th>
+                        <th>Adres MAC</th>
+                        <th>W Podróży</th>
+                        <th>Akcja</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for board in boards %}
+                    <tr>
+                        <td>{{ board.id }}</td>
+                        <td>
+                            <form method="post" action="{{ url_for('boards.boards', username=username) }}">
+                                <input type="hidden" name="board_id" value="{{ board.id }}">
+                                <input type="text" name="new_name" value="{{ board.board_name }}">
+                                <button type="submit">Zapisz</button>
+                            </form>
+                        </td>
+                        <td>{{ board.mac_address }}</td>
+                        <td>
+                            {{ 'Tak' if board.is_in_use else 'Nie' }}
+                        </td>
+                        <td>
+                            <form method="post" action="{{ url_for('boards.boards', username=username) }}">
+                                <input type="hidden" name="board_id" value="{{ board.id }}">
+                                <button type="submit" name="reset" class="reset">Resetuj</button>
+                            </form>
+                            <form method="post" action="{{ url_for('boards.boards', username=username) }}">
+                                <input type="hidden" name="board_id" value="{{ board.id }}">
+                                <input type="hidden" name="mac_address" value="{{ board.mac_address }}">
+                                <button type="submit" name="delete" class="delete">Usuń</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</body>
+</html>

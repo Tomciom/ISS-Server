@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Szczegóły Podróży</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f8f9fa;
+            padding: 20px;
+            display: flex;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        p {
+            font-size: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        form {
+            margin: 20px;
+        }
+
+        button {
+            margin: 10px 0;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 90vh;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            margin: 25px;
+        }
+
+        .sidebar a {
+            text-decoration: none;
+            color: #333;
+            padding: 10px 0;
+            margin: 5px 0;
+            display: block;
+            font-size: 16px;
+        }
+
+        .sidebar a:hover {
+            background-color: #ddd;
+            border-radius: 5px;
+        }
+        .content {
+            padding: 20px;
+            justify-content: center;
+            align-items: center;
+            width: 85%;
+            margin-left: 220px;
+        }
+        .code-box {
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #fafafa;
+        }
+        .code-box p {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .code-box button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
+        .code-box button:hover {
+            background-color: #0056b3;
+        }
+        .journey-list {
+            margin: 20px auto;
+            max-width: 800px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .journey-list th, .journey-list td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .journey-list th {
+            background-color: #f4f4f4;
+        }
+
+        .journey-list tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .journey-link {
+            color: #007bff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .journey-link:hover {
+            text-decoration: underline;
+        }
+
+        .plot-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .plot-container {
+            flex: 1;
+            min-width: 45%;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+    
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .fire-detected {
+            color: red;
+            font-weight: bold;
+        }
+
+        .scrollable-table {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow-y: auto;
+            max-height: 300px;
+            margin-bottom: 30px;
+        }
+
+    </style>
+</head>
+<body>
+        <div class="sidebar">
+            <div>
+                <a href="{{ url_for('home.home') }}">Strona Główna</a>
+                <a href="{{ url_for('boards.boards', username=username) }}">Twoje Urządzenia</a>
+                <a href="{{ url_for('current_journey.current_journey')}}">Ostatnia Podróż</a>
+                <a href="{{ url_for('new_journey.new_journey') }}">Nowa Podróż</a>
+                <a href="{{ url_for('journey_history.journey_history') }}">Historia Podróży</a>
+            </div>
+            <a href="{{ url_for('login.logout') }}">Wyloguj</a>
+        </div>
+
+        <div class="content">
+            <h1>Szczegóły Podróży #{{ journey_id }}</h1>
+
+            <a href="{{ url_for('journey_details.download_csv', journey_id=journey_id) }}">
+                <button>Zapisz jako CSV</button>
+            </a>
+
+            <h2>Wykresy</h2>
+            <div class="plot-row">
+                <div id="temperature-plot" class="plot-container"></div>
+                <div id="pressure-plot" class="plot-container"></div>
+            </div>
+
+            <div class="plot-row">
+                <div id="rotation-plot" class="plot-container"></div>
+                <div id="acceleration-plot" class="plot-container"></div>
+            </div>
+            <h2>Dane Pomiarowe</h2>
+            <div class="scrollable-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Temperatura (°C)</th>
+                            <th>Ciśnienie (hPa)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in measurements %}
+                        <tr>
+                            <td>{{ row.timestamp }}</td>
+                            <td>{{ row.temperature }}</td>
+                            <td>{{ row.pressure }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <h2>Wykrycie Światła</h2>
+            <div class="scrollable-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Wykryto Światło</th>
+                            <th>Wartość Czujnika</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in fire_data if row.fire_detected %}
+                        <tr>
+                            <td>{{ row.timestamp }}</td>
+                            <td class="fire-detected">Tak</td>
+                            <td>{{ row.sensor_value }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <h2>Prędkość kątowa i Przyspieszenie</h2>
+            <div class="scrollable-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Prędkość w x (°/s)</th>
+                            <th>Prędkość w y (°/s)</th>
+                            <th>Prędkość w z (°/s)</th>
+                            <th>GX</th>
+                            <th>GY</th>
+                            <th>GZ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in rotation_data %}
+                        <tr>
+                            <td>{{ row.timestamp }}</td>
+                            <td>{{ row.rotation_degrees_x }}</td>
+                            <td>{{ row.rotation_degrees_y }}</td>
+                            <td>{{ row.rotation_degrees_z }}</td>
+                            <td>{{ row.gx }}</td>
+                            <td>{{ row.gy }}</td>
+                            <td>{{ row.gz }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <script>
+                const timestamps = {{ measurements | map(attribute='timestamp') | list | tojson }};
+                const temperatures = {{ measurements | map(attribute='temperature') | list | tojson }};
+                const pressures = {{ measurements | map(attribute='pressure') | list | tojson }};
+
+                const rotationTimestamps = {{ rotation_data | map(attribute='timestamp') | list | tojson }};
+                const rotations_x = {{ rotation_data | map(attribute='rotation_degrees_x') | list | tojson }};
+                const rotations_y = {{ rotation_data | map(attribute='rotation_degrees_y') | list | tojson }};
+                const rotations_z = {{ rotation_data | map(attribute='rotation_degrees_z') | list | tojson }};
+                const gx = {{ rotation_data | map(attribute='gx') | list | tojson }};
+                const gy = {{ rotation_data | map(attribute='gy') | list | tojson }};
+                const gz = {{ rotation_data | map(attribute='gz') | list | tojson }};
+
+                Plotly.newPlot('temperature-plot', [{
+                    x: timestamps,
+                    y: temperatures,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: 'Temperatura',
+                    line: { color: 'red' }
+                }], {
+                    title: 'Temperatura w czasie',
+                    xaxis: { title: 'Czas' },
+                    yaxis: { title: 'Temperatura (°C)' }
+                });
+
+                Plotly.newPlot('pressure-plot', [{
+                    x: timestamps,
+                    y: pressures,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: 'Ciśnienie',
+                    line: { color: 'blue' }
+                }], {
+                    title: 'Ciśnienie w czasie',
+                    xaxis: { title: 'Czas' },
+                    yaxis: { title: 'Ciśnienie (hPa)' }
+                });
+
+                Plotly.newPlot('rotation-plot', [
+                    {
+                        x: rotationTimestamps,
+                        y: rotations_x,
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: 'Kierunek x',
+                        line: { color: 'purple' }
+                },
+                {
+                    x: rotationTimestamps,
+                    y: rotations_y,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: 'Kierunek y',
+                    line: { color: 'orange' }
+                },
+                {
+                    x: rotationTimestamps,
+                    y: rotations_z,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: 'Kierunek z',
+                    line: { color: 'brown' }
+                }
+            ], {
+                    title: 'Prędkość kątowa w 3 kierunkach w czasie',
+                    xaxis: { title: 'Czas' },
+                    yaxis: { title: 'Prędkość kątowa (°/s)' }
+                });
+
+                Plotly.newPlot('acceleration-plot', [
+                    {
+                        x: rotationTimestamps,
+                        y: gx,
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: 'GX',
+                        line: { color: 'purple' }
+                    },
+                    {
+                        x: rotationTimestamps,
+                        y: gy,
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: 'GY',
+                        line: { color: 'orange' }
+                    },
+                    {
+                        x: rotationTimestamps,
+                        y: gz,
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: 'GZ',
+                        line: { color: 'brown' }
+                    }
+                ], {
+                    title: 'Przyspieszenie w 3 kierunkach w czasie',
+                    xaxis: { title: 'Czas' },
+                    yaxis: { title: 'Przyspieszenie (m/s²)' }
+                });
+            </script>
+    </div>
+</body>
+</html>

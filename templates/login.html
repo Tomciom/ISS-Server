@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logowanie</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>Logowanie</h1>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class="messages">
+            <li>{{ messages[-1] }}</li>
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('login.login') }}">
+        <label for="username">Nazwa użytkownika</label><br>
+        <input type="text" id="username" name="username" required><br>
+        
+        <label for="password">Hasło</label><br>
+        <div class="password-container">
+            <input type="password" id="password" name="password" placeholder="Hasło" required oninput="checkPasswordStrength()">
+            <img id="password-icon" src="../static/img/eye_closed.png" alt="Toggle visibility" class="password-toggle" onclick="toggleVisibility('password')">
+        </div>
+        
+        <button type="submit">Zaloguj</button>
+    </form>
+
+    <a href="{{ url_for('home.home') }}">Powrót</a>
+
+    <script>
+        function toggleVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(`${inputId}-icon`);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.src = '../static/img/eye_open.png';
+            } else {
+                input.type = 'password';
+                icon.src = '../static/img/eye_closed.png';
+            }
+        }
+    </script>
+</body>
+</html>

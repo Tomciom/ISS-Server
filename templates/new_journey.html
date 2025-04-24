@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home</title>
+  <style>
+      body {
+          font-family: Arial, sans-serif;
+          text-align: center;
+          background-color: #f8f9fa;
+          padding: 20px;
+          display: flex;
+      }
+
+      h1 {
+          color: #333;
+      }
+
+      p {
+          font-size: 20px;
+          color: #333;
+          text-align: center;
+      }
+
+      form {
+          margin: 20px;
+      }
+
+      button {
+          margin: 10px 0;
+          padding: 10px 20px;
+          cursor: pointer;
+      }
+
+      .sidebar {
+          width: 200px;
+          background-color: #f4f4f4;
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          height: 90vh;
+          box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+      }
+
+      .sidebar a {
+          text-decoration: none;
+          color: #333;
+          padding: 10px 0;
+          margin: 5px 0;
+          display: block;
+          font-size: 16px;
+      }
+      .sidebar a:hover {
+          background-color: #ddd;
+          border-radius: 5px;
+      }
+      .content {
+          padding: 20px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 85%;
+      }
+      .code-box {
+          text-align: center;
+          border: 1px solid #ccc;
+          padding: 20px;
+          border-radius: 10px;
+          background-color: #fafafa;
+      }
+      .code-box p {
+          font-size: 24px;
+          font-weight: bold;
+          margin: 10px 0;
+      }
+      .code-box button {
+          padding: 10px 20px;
+          font-size: 16px;
+          cursor: pointer;
+          border: none;
+          background-color: #007bff;
+          color: white;
+          border-radius: 5px;
+      }
+      .code-box button:hover {
+          background-color: #0056b3;
+      }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+      <div>
+          <a href="{{ url_for('home.home') }}">Strona Główna</a>
+          <a href="{{ url_for('boards.boards', username=username) }}">Twoje Urządzenia</a>
+          <a href="{{ url_for('current_journey.current_journey') }}">Ostatnia Podróż</a>
+          <a href="{{ url_for('new_journey.new_journey', boards=boards) }}">Nowa Podróż</a>
+          <a href="{{ url_for('journey_history.journey_history') }}">Historia Podróży</a> 
+      </div>
+      <a href="{{ url_for('login.logout') }}">Wyloguj</a>
+  </div>
+              
+  <div class="content">
+      <div class="code-box">
+          <form id="configForm">
+              <label for="mac_address">Wybierz płytkę:</label>
+              <select id="mac_address" name="mac_address" required>
+                  {% for board in boards %}
+                      <option value="{{ board.mac_address }}">{{ board.board_name }}</option>
+                  {% endfor %}
+              </select>
+              <br><br>
+
+              <label for="gyro">Zakres żyroskopu:</label>
+              <select id="gyro" name="gyro">
+                  <option value="0">±250°/s</option>
+                  <option value="1" selected>±500°/s</option>
+                  <option value="2">±1000°/s</option>
+                  <option value="3">±2000°/s</option>
+              </select>
+              <br><br>
+
+              <label for="acce">Zakres akcelerometru:</label>
+              <select id="acce" name="acce">
+                  <option value="0">±2g</option>
+                  <option value="1" selected>±4g</option>
+                  <option value="2">±8g</option>
+                  <option value="3">±16g</option>
+              </select>
+              <br><br>
+
+              <label for="dlpf">Filtracja danych żyroskopu i akcelerometru:</label>
+              <select name="dlpf" id="dlpf">
+                  <option value="0">Przepuszcza do 260Hz</option>
+                  <option value="1">Przepuszcza do 184Hz</option>
+                  <option value="2">Przepuszcza do 94Hz</option>
+                  <option value="3" selected>Przepuszcza do 44Hz</option>
+                  <option value="4">Przepuszcza do 21Hz</option>
+                  <option value="5">Przepuszcza do 10Hz</option>
+                  <option value="6">Przepuszcza do 5Hz</option>
+              </select>
+              <br><br>
+
+              <label for="osrs_p">Dokładność pomiarów ciśnienia:</label>
+              <select name="osrs_p" id="osrs_p">
+                  <option value="0">Pomiń</option>
+                  <option value="1">×1</option>
+                  <option value="2">×2</option>
+                  <option value="3">×4</option>
+                  <option value="4">×8</option>
+                  <option value="5" selected="selected">×16</option>
+              </select>
+              <br><br>
+
+              <label for="osrs_t">Dokładność pomiarów temperatury:</label>
+              <select name="osrs_t" id="osrs_t">
+                  <option value="0">Pomiń</option>
+                  <option value="1">×1</option>
+                  <option value="2">×2</option>
+                  <option value="3">×4</option>
+                  <option value="4">×8</option>
+                  <option value="5" selected>×16</option>
+              </select>
+              <br><br>
+
+              <label for="filter">Dokładność tłumienia szumów:</label>
+              <select name="filter" id="filter">
+                  <option value="0">Wyłączone</option>
+                  <option value="1">x2</option>
+                  <option value="2">x4</option>
+                  <option value="3">x8</option>
+                  <option value="4"selected>x16</option>
+              </select>
+              <br><br>
+
+              <label for="interval">Częstotliwość pomiaru (sekundy):</label>
+              <input type="number" id="interval" name="interval" min="1" value="5" required>
+              <br><br>
+
+              <button type="button" onclick="sendConfig()">Zastosuj konfigurację</button>
+          </form>
+      </div>
+      
+      <script>
+          function sendConfig() {
+              const data = {
+                  mac_address: document.getElementById('mac_address').value,
+                  gyro: document.getElementById('gyro').value,
+                  acce: document.getElementById('acce').value,
+                  dlpf: document.getElementById('dlpf').value,
+                  osrs_p: document.getElementById('osrs_p').value,
+                  osrs_t: document.getElementById('osrs_t').value,
+                  filter: document.getElementById('filter').value,
+                  interval: document.getElementById('interval').value
+              };
+
+              fetch('/new_journey', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify(data)
+              }).then(response => {
+                  if (response.redirected) {
+                      window.location.href = response.url;
+                  } else {
+                      return response.json();
+                  }
+              }).then(data => {
+                  if (data && data.message) {
+                      alert(data.message);
+                  }
+              }).catch(error => console.error('Error:', error));
+          }
+      </script>
+  </div>
+</body>
+</html>

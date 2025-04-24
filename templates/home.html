@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f8f9fa;
+            padding: 20px;
+            display: flex;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        p {
+            font-size: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        form {
+            margin: 20px;
+        }
+
+        button {
+            margin: 10px 0;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        .sidebar {
+            width: 200px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 90vh;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+    
+        .sidebar a {
+            text-decoration: none;
+            color: #333;
+            padding: 10px 0;
+            margin: 5px 0;
+            display: block;
+            font-size: 16px;
+        }
+        .sidebar a:hover {
+            background-color: #ddd;
+            border-radius: 5px;
+        }
+        .content {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 85%;
+        }
+        .code-box {
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #fafafa;
+        }
+        .code-box p {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .code-box button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
+        .code-box button:hover {
+            background-color: #0056b3;
+        }
+        #timer {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ff0000;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    {% if username %}
+        <div class="sidebar">
+            <div>
+                <a href="{{ url_for('home.home') }}">Strona Główna</a>
+                <a href="{{ url_for('boards.boards', username=username) }}">Twoje Urządzenia</a>
+                <a href="{{ url_for('current_journey.current_journey')}}">Ostatnia Podróż</a>
+                <a href="{{ url_for('new_journey.new_journey') }}">Nowa Podróż</a>
+                <a href="{{ url_for('journey_history.journey_history') }}">Historia Podróży</a>
+                
+                
+            </div>
+            <a href="{{ url_for('login.logout') }}">Wyloguj</a>
+                
+        </div>
+        <div class="content">
+            <div class="code-box">
+                <p id="code">123456</p>
+                <p id="timer">1:30</p>
+                <button onclick="resetCodeAndTimer()">Generuj Nowy Kod</button>
+            </div>
+        </div>
+        <script>
+            let countdown;
+
+            function startTimer(duration) {
+                let timer = duration, minutes, seconds;
+                countdown = setInterval(function () {
+                    minutes = Math.floor(timer / 60);
+                    seconds = timer % 60;
+
+                    seconds = seconds < 10 ? '0' + seconds : seconds;
+                    document.getElementById('timer').textContent = minutes + ':' + seconds;
+
+                    if (--timer < 0) {
+                        resetCodeAndTimer();
+                    }
+                }, 1000);
+            }
+
+            function generateNewCode() {
+                const newCode = Math.floor(100000 + Math.random() * 900000);
+                document.getElementById('code').textContent = newCode;
+
+                fetch('/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ code: newCode })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                    } else {
+                        alert('Kod został wysłany, ale brak wiadomości zwrotnej.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Błąd podczas wysyłania kodu:', error);
+                });
+            }
+
+            function resetCodeAndTimer() {
+                clearInterval(countdown);
+                generateNewCode();
+                startTimer(90);
+            }
+
+            window.onload = function() {
+                generateNewCode();
+                startTimer(90);
+            };
+        </script>
+    {% else %}
+        
+        <div class="sidebar">
+            <div>
+                <h1>Witaj!</h1>
+                
+                <a href="{{ url_for('home.home') }}">Strona Główna</a>
+                <a href="{{ url_for('login.login') }}">Logowanie</a>
+                <a href="{{ url_for('register.register') }}">Rejestracja</a>
+                
+            </div>
+                
+        </div>
+        <div class="content">
+            <p>Zaloguj się lub zarejestruj, aby korzystać z aplikacji</p>
+        </div>
+    {% endif %}
+</body>
+</html>

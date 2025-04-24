@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rejestracja</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+</head>
+<body>
+    <h1>Rejestracja</h1>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class="messages">
+            <li>{{ messages[-1] }}</li>
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <input type="text" name="username" placeholder="Nazwa użytkownika"  title="Nazwij się tylko przy użyciu liter i cyfr" pattern="[A-Za-z0-9]+" required><br>
+        
+        <div class="password-container">
+            <input type="password" id="password" name="password" placeholder="Hasło" required oninput="checkPasswordStrength()">
+            <img id="password-icon" src="../static/img/eye_closed.png" alt="Toggle visibility" class="password-toggle" onclick="toggleVisibility('password')">
+        </div>
+
+        <div class="password-container">
+            <input type="password" id="confirm-password" name="confirm_password" placeholder="Potwierdź hasło" required>
+            <img id="confirm-password-icon" src="../static/img/eye_closed.png" alt="Toggle visibility" class="password-toggle" onclick="toggleVisibility('confirm-password')">
+        </div>
+
+        <button type="submit">Zarejestruj</button>
+    </form>
+
+    <a href="{{ url_for('home.home') }}">Powrót</a>
+
+    <script>
+        function toggleVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(`${inputId}-icon`);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.src = '../static/img/eye_open.png';
+            } else {
+                input.type = 'password';
+                icon.src = '../static/img/eye_closed.png';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historia Podróży</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f8f9fa;
+            padding: 20px;
+            display: flex;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        p {
+            font-size: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        form {
+            margin: 20px;
+        }
+
+        button {
+            margin: 10px 0;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        .sidebar {
+            width: 200px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 90vh;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+    
+        .sidebar a {
+            text-decoration: none;
+            color: #333;
+            padding: 10px 0;
+            margin: 5px 0;
+            display: block;
+            font-size: 16px;
+        }
+        .sidebar a:hover {
+            background-color: #ddd;
+            border-radius: 5px;
+        }
+        .content {
+            padding: 20px;
+            justify-content: center;
+            align-items: center;
+            width: 85%;
+        }
+        .code-box {
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #fafafa;
+        }
+        .code-box p {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .code-box button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
+        .code-box button:hover {
+            background-color: #0056b3;
+        }
+        .journey-list {
+            margin: 20px auto;
+            max-width: 800px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .journey-list th, .journey-list td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .journey-list th {
+            background-color: #f4f4f4;
+        }
+
+        .journey-list tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .journey-link {
+            color: #007bff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .journey-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    {% if username %}
+        <div class="sidebar">
+            <div>
+                <a href="{{ url_for('home.home') }}">Strona Główna</a>
+                <a href="{{ url_for('boards.boards', username=username) }}">Twoje Urządzenia</a>
+                <a href="{{ url_for('current_journey.current_journey')}}">Ostatnia Podróż</a>
+                <a href="{{ url_for('new_journey.new_journey') }}">Nowa Podróż</a>
+                <a href="{{ url_for('journey_history.journey_history') }}">Historia Podróży</a>
+            </div>
+            <a href="{{ url_for('login.logout') }}">Wyloguj</a>
+        </div>
+        
+        <div class="content">
+            <h1>Historia Podróży</h1>
+            
+            <table class="journey-list">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nazwa Płytki</th>
+                        <th>Data Rozpoczęcia</th>
+                        <th>Data Zakończenia</th>
+                        <th>Szczegóły</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for journey in journeys %}
+                    <tr>
+                        <td>{{ journey.id }}</td>
+                        <td>{{ journey.board_name }}</td>
+                        <td>{{ journey.start_time }}</td>
+                        <td>{{ journey.end_time or 'W trakcie' }}</td>
+                        <td><a class="journey-link" href="/journey_details/{{ journey.id }}">Zobacz</a></td>
+                        
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</body>
+</html>
