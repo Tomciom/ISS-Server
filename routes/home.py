@@ -4,7 +4,7 @@ import sqlite3
 bp = Blueprint('home', __name__)
 
 def send_code(username):
-    conn = sqlite3.connect('Users.db')
+    conn = sqlite3.connect('measurements.db')
     c = conn.cursor()
 
     c.execute("SELECT pin FROM users WHERE username = ?", (username,))
@@ -29,7 +29,7 @@ def home():
     if request.method == 'POST':
         newCode = request.json
         try:
-            conn = sqlite3.connect('Users.db')
+            conn = sqlite3.connect('measurements.db')
             c = conn.cursor()
             c.execute("UPDATE users SET pin = ? WHERE username = ?", (newCode['code'], username))
             print("Received configuration code:", newCode['code'])

@@ -15,7 +15,7 @@ def register():
             flash('Hasła nie są zgodne! Spróbuj ponownie.')
             return redirect(url_for('register.register'))
         try:
-            conn = sqlite3.connect('Users.db')
+            conn = sqlite3.connect('measurements.db')
             c = conn.cursor()
             c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
             conn.commit()

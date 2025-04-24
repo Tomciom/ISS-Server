@@ -123,9 +123,8 @@
             <div>
                 <a href="{{ url_for('home.home') }}">Strona Główna</a>
                 <a href="{{ url_for('boards.boards', username=username) }}">Twoje Urządzenia</a>
-                <a href="{{ url_for('current_journey.current_journey')}}">Ostatnia Podróż</a>
-                <a href="{{ url_for('new_journey.new_journey') }}">Nowa Podróż</a>
-                <a href="{{ url_for('journey_history.journey_history') }}">Historia Podróży</a>
+                <!--<a href="{{ url_for('current_journey.current_journey')}}">Ostatnia Podróż</a>
+                <a href="{{ url_for('journey_history.journey_history') }}">Historia Podróży</a>-->
             </div>
         <a href="{{ url_for('login.logout') }}">Wyloguj</a>
         </div> 
@@ -137,7 +136,6 @@
                         <th>ID</th>
                         <th>Nazwa Płytki</th>
                         <th>Adres MAC</th>
-                        <th>W Podróży</th>
                         <th>Akcja</th>
                     </tr>
                 </thead>
@@ -154,13 +152,6 @@
                         </td>
                         <td>{{ board.mac_address }}</td>
                         <td>
-                            {{ 'Tak' if board.is_in_use else 'Nie' }}
-                        </td>
-                        <td>
-                            <form method="post" action="{{ url_for('boards.boards', username=username) }}">
-                                <input type="hidden" name="board_id" value="{{ board.id }}">
-                                <button type="submit" name="reset" class="reset">Resetuj</button>
-                            </form>
                             <form method="post" action="{{ url_for('boards.boards', username=username) }}">
                                 <input type="hidden" name="board_id" value="{{ board.id }}">
                                 <input type="hidden" name="mac_address" value="{{ board.mac_address }}">

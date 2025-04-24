@@ -9,7 +9,7 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
-        conn = sqlite3.connect('Users.db')
+        conn = sqlite3.connect('measurements.db')
         c = conn.cursor()
         c.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password))
         user = c.fetchone()
