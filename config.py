@@ -2,4 +2,4 @@ class Config:
     SECRET_KEY = 'sekrecik'
     DEBUG = True
 
-HOST = "192.168.1.15"
+mqtt_broker = "192.168.1.15"

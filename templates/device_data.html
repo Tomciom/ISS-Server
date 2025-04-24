@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="5">
+    <title>Szczegóły Urządzenia</title> {# Changed title #}
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f8f9fa;
+            padding: 20px;
+            display: flex;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        p {
+            font-size: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        form {
+            margin: 20px;
+        }
+
+        button {
+            margin: 10px 0;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 90vh;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            margin: 25px;
+        }
+
+        .sidebar a {
+            text-decoration: none;
+            color: #333;
+            padding: 10px 0;
+            margin: 5px 0;
+            display: block;
+            font-size: 16px;
+        }
+
+        .sidebar a:hover {
+            background-color: #ddd;
+            border-radius: 5px;
+        }
+        .content {
+            padding: 20px;
+            justify-content: center;
+            align-items: center;
+            width: 85%;
+            margin-left: 220px;
+        }
+        .code-box { /* Not used in this template, but keeping existing styles */
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #fafafa;
+        }
+        .code-box p { /* Not used in this template, but keeping existing styles */
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .code-box button { /* Not used in this template, but keeping existing styles */
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
+        .code-box button:hover { /* Not used in this template, but keeping existing styles */
+            background-color: #0056b3;
+        }
+        .journey-list { /* Not used in this template, but keeping existing styles */
+            margin: 20px auto;
+            max-width: 800px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .journey-list th, .journey-list td { /* Not used in this template, but keeping existing styles */
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .journey-list th { /* Not used in this template, but keeping existing styles */
+            background-color: #f4f4f4;
+        }
+
+        .journey-list tr:hover { /* Not used in this template, but keeping existing styles */
+            background-color: #f1f1f1;
+        }
+
+        .journey-link { /* Not used in this template, but keeping existing styles */
+            color: #007bff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .journey-link:hover { /* Not used in this template, but keeping existing styles */
+            text-decoration: underline;
+        }
+
+
+        .plot-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .plot-container {
+            flex: 1;
+            min-width: 45%;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .fire-detected {
+            color: red;
+            font-weight: bold;
+        }
+
+        .scrollable-table {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow-y: auto;
+            max-height: 300px;
+            margin-bottom: 30px;
+        }
+
+    </style>
+</head>
+<body>
+    {% if username %} {# Załóżmy, że template device_data też ma username #}
+          <div class="sidebar">
+            <div>
+                <a href="{{ url_for('home.home') }}">Strona Główna</a>
+                {# Assuming boards route is named boards.boards_route #}
+                <a href="{{ url_for('boards.boards', username=username) }}">Twoje Urządzenia</a> {# Zmieniono z boards.boards na boards.boards_route dla spójności z poprzednim krokiem #}
+                {# USUNIĘTY LINK DO DANYCH OSTATNIEGO URZĄDZENIA #}
+                {# <a href="{{ url_for('latest_device_data.latest_device_data_route')}}">Dane ostatniego urządzenia</a> #}
+                {# Removed journey/new_journey link #}
+                {# <a href="{{ url_for('new_journey.new_journey') }}">Nowa Podróż</a> #}
+                {# Removed journey_history link - boards list might serve this purpose #}
+                {# <a href="{{ url_for('journey_history.journey_history') }}">Historia Pomiarów?</a> #}
+            </div>
+            <a href="{{ url_for('login.logout') }}">Wyloguj</a>
+        </div>
+
+        <div class="content">
+            {# Updated title to show MAC address #}
+            <h1>Szczegóły Urządzenia {{ mac_address }}</h1>
+
+            {# Update the download link to use the new route and mac_address #}
+            <a href="{{ url_for('device_data.download_csv', mac_address=mac_address) }}">
+                <button>Zapisz jako CSV</button>
+            </a>
+
+            <h2>Wykresy</h2>
+            {# Only Temperature and Pressure plots available with current schema #}
+            <div class="plot-row">
+                <div id="temperature-plot" class="plot-container"></div>
+                <div id="pressure-plot" class="plot-container"></div>
+            </div>
+
+            {# Removed rotation and acceleration plots as data is not available #}
+
+
+            <h2>Dane Pomiarowe</h2>
+            {% if measurements %} {# Check if there is data #}
+            <div class="scrollable-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp Serwera</th> {# Clarified timestamp #}
+                            <th>Temperatura (°C)</th>
+                            <th>Ciśnienie (hPa)</th>
+                            <th>Wilgotność (%)</th> {# Added Humidity #}
+                            <th>Wykryto Światło</th> {# Added Sunshine #}
+                            <th>Prędkość Wiatru (m/s)</th> {# Added Wind Speed #}
+                            <th>Kierunek Wiatru</th> {# Added Wind Direction #}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in measurements | reverse %}
+                        <tr>
+                            <td>{{ row.server_timestamp }}</td> {# Use server_timestamp #}
+                            <td>{{ row.temperature }}</td>
+                            <td>{{ row.pressure }}</td>
+                            <td>{{ row.humidity }}</td>
+                            {# Map sunshine to Yes/No based on a threshold (e.g., > 0 or == 1) #}
+                            <td>{{ "Tak" if row.sunshine is not none and row.sunshine > 0 else "Nie" }}</td>
+                            <td>{{ row.wind_speed }}</td>
+                            <td>{{ row.wind_direction }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            {# Obsługa przypadku gdy nie ma danych #}
+            <p>Brak danych pomiarowych dla tego urządzenia.</p>
+            {% endif %} {# Closing the if measurements block #}
+        </div>
+    {% else %}
+        {# Obsługa przypadku gdy użytkownik nie jest zalogowany #}
+        <div class="sidebar">
+            <div>
+                <h1>Witaj!</h1>
+                <a href="{{ url_for('home.home') }}">Strona Główna</a>
+                <a href="{{ url_for('login.login') }}">Logowanie</a>
+                <a href="{{ url_for('register.register') }}">Rejestracja</a>
+            </div>
+        </div>
+        <div class="content">
+            <p>Zaloguj się lub zarejestruj, aby przeglądać dane urządzeń</p>
+        </div>
+    {% endif %} {# Closing the if username block #}
+
+    <script>
+        // Plotly plots - ensure data is available and correctly formatted
+        // Assuming 'measurements' is passed from the backend and contains the data
+        var measurements = {{ measurements | tojson }}; // Pass measurements from backend to JS
+
+        if (measurements && measurements.length > 0) {
+            var timestamps = measurements.map(row => row.server_timestamp);
+            var temperatures = measurements.map(row => row.temperature);
+            var pressures = measurements.map(row => row.pressure);
+            // Add data for new plots
+            var humidities = measurements.map(row => row.humidity);
+            var windSpeeds = measurements.map(row => row.wind_speed);
+
+
+            var temp_trace = {
+                x: timestamps,
+                y: temperatures,
+                mode: 'lines+markers',
+                type: 'scatter',
+                name: 'Temperatura'
+            };
+
+            var temp_layout = {
+                title: 'Wykres Temperatury',
+                xaxis: {
+                    title: 'Czas'
+                },
+                yaxis: {
+                    title: 'Temperatura (°C)'
+                }
+            };
+
+            Plotly.newPlot('temperature-plot', [temp_trace], temp_layout);
+
+            var pressure_trace = {
+                x: timestamps,
+                y: pressures,
+                mode: 'lines+markers',
+                type: 'scatter',
+                name: 'Ciśnienie'
+            };
+
+            var pressure_layout = {
+                title: 'Wykres Ciśnienia',
+                xaxis: {
+                    title: 'Czas'
+                },
+                yaxis: {
+                    title: 'Ciśnienie (hPa)'
+                }
+            };
+
+            Plotly.newPlot('pressure-plot', [pressure_trace], pressure_layout);
+
+            // Add new plots
+            var humidity_trace = {
+                x: timestamps,
+                y: humidities,
+                mode: 'lines+markers',
+                type: 'scatter',
+                name: 'Wilgotność'
+            };
+
+            var humidity_layout = {
+                title: 'Wykres Wilgotności',
+                xaxis: {
+                    title: 'Czas'
+                },
+                yaxis: {
+                    title: 'Wilgotność (%)'
+                }
+            };
+
+            // You'll need a new div in your HTML for this plot: <div id="humidity-plot" class="plot-container"></div>
+            // Plotly.newPlot('humidity-plot', [humidity_trace], humidity_layout);
+
+            var wind_speed_trace = {
+                x: timestamps,
+                y: windSpeeds,
+                mode: 'lines+markers',
+                type: 'scatter',
+                name: 'Prędkość Wiatru'
+            };
+
+            var wind_speed_layout = {
+                title: 'Wykres Prędkości Wiatru',
+                xaxis: {
+                    title: 'Czas'
+                },
+                yaxis: {
+                    title: 'Prędkość Wiatru (m/s)'
+                }
+            };
+
+            // You'll need a new div in your HTML for this plot: <div id="wind-speed-plot" class="plot-container"></div>
+            // Plotly.newPlot('wind-speed-plot', [wind_speed_trace], wind_speed_layout);
+
+
+        } else {
+            // Handle the case where there is no data to plot
+            console.log("No measurements available to plot.");
+            // You might want to display a message to the user on the page
+        }
+
+
+    </script>
+</body>
+</html>

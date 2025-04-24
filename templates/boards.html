@@ -144,6 +144,7 @@
                     <tr>
                         <td>{{ board.id }}</td>
                         <td>
+                            
                             <form method="post" action="{{ url_for('boards.boards', username=username) }}">
                                 <input type="hidden" name="board_id" value="{{ board.id }}">
                                 <input type="text" name="new_name" value="{{ board.board_name }}">
@@ -152,6 +153,10 @@
                         </td>
                         <td>{{ board.mac_address }}</td>
                         <td>
+                            <form method="get" action="{{ url_for('device_data.device_data_by_mac', mac_address=board.mac_address) }}">
+                                {# Nie potrzebujemy ukrytych pól w formie GET do przekazania MAC adresu, bo jest on częścią URL #}
+                                <button type="submit" class="reset">Pokaż Dane</button>
+                           </form>
                             <form method="post" action="{{ url_for('boards.boards', username=username) }}">
                                 <input type="hidden" name="board_id" value="{{ board.id }}">
                                 <input type="hidden" name="mac_address" value="{{ board.mac_address }}">
