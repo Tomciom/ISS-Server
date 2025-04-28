@@ -4,17 +4,11 @@ import sqlite3
 bp = Blueprint('boards', __name__)
 
 def delete_related_journey_data(mac_address):
-    conn = sqlite3.connect('journeys.db')
+    conn = sqlite3.connect('measurements.db')
     c = conn.cursor()
 
-    c.execute('DELETE FROM temperature_pressure WHERE mac_address = ?', (mac_address,))
+    c.execute('DELETE FROM measurements WHERE mac_address = ?', (mac_address,))
 
-    c.execute('DELETE FROM fire_detection WHERE mac_address = ?', (mac_address,))
-
-    c.execute('DELETE FROM rotation_acceleration WHERE mac_address = ?', (mac_address,))
-
-    c.execute('DELETE FROM journeys WHERE mac_address = ?', (mac_address,))
-    
     conn.commit()
     conn.close()
 
@@ -25,7 +19,7 @@ def delete_board_and_related_data(board_id, mac_address):
     conn.commit()
     conn.close()
 
-    delete_related_journey_data(mac_address)
+    #delete_related_journey_data(mac_address)
 
 def get_user_boards(username):
     conn = sqlite3.connect('measurements.db')
