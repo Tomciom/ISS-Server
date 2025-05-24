@@ -39,7 +39,8 @@ def init_db():
             humidity REAL,
             sunshine INTEGER,
             wind_speed REAL,
-            wind_direction TEXT
+            wind_direction TEXT,
+            rain_intensity_percent REAL            
         )
     ''')
     conn.commit()
@@ -116,8 +117,9 @@ def save_measurement(data):
                     humidity,
                     sunshine,
                     wind_speed,
-                    wind_direction
-                ) VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?)
+                    wind_direction, 
+                    rain_intensity_percent                  
+                ) VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?)
                 ''',
                 (\
                     data.get('mac_address'), # Use .get() for safer access
@@ -127,6 +129,7 @@ def save_measurement(data):
                     data.get('sunshine'),
                     data.get('wind_speed'),
                     data.get('wind_direction'),
+                    data.get('rain_intensity_percent'),
                 )
             )
             conn.commit() # Commit the transaction
@@ -199,7 +202,7 @@ def create_app():
         data['mac_address'] = mac_address # Ensure the mac_address used is from the URL
 
         # required fields check
-        required = ['mac_address', 'temperature', 'pressure', 'humidity', 'sunshine', 'wind_speed', 'wind_direction']
+        required = ['mac_address', 'temperature', 'pressure', 'humidity', 'sunshine', 'wind_speed', 'wind_direction', 'rain_intensity_percent']
         missing = [f for f in required if f not in data]
         if missing:
             msg = f"Missing fields in JSON: {', '.join(missing)}"
@@ -237,4 +240,4 @@ if __name__ == '__main__':
     init_db()
     app = create_app()
     # Consider using a more robust server like Gunicorn or uWSGI in production
-    app.run(host="192.168.1.15", port=5000, debug=config.Config.DEBUG)
+    app.run(host="localhost", port=5000, debug=config.Config.DEBUG)
