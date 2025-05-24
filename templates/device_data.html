@@ -225,9 +225,9 @@
                             <th>Temperatura (°C)</th>
                             <th>Ciśnienie (hPa)</th>
                             <th>Wilgotność (%)</th> {# Added Humidity #}
-                            <th>Wykryto Światło</th> {# Added Sunshine #}
-                            <th>Prędkość Wiatru (m/s)</th> {# Added Wind Speed #}
-                            <th>Kierunek Wiatru</th> {# Added Wind Direction #}
+                            <th>Nasłonecznienie</th> {# Added Sunshine #}
+                            <th>Prędkość Wiatru (km/h)</th> {# Added Wind Speed #}
+                            <th>Opady</th> {# Added Wind Direction #}
                         </tr>
                     </thead>
                     <tbody>
@@ -236,11 +236,10 @@
                             <td>{{ row.server_timestamp }}</td> {# Use server_timestamp #}
                             <td>{{ row.temperature }}</td>
                             <td>{{ row.pressure }}</td>
-                            <td>{{ row.humidity }}</td>
-                            {# Map sunshine to Yes/No based on a threshold (e.g., > 0 or == 1) #}
-                            <td>{{ "Tak" if row.sunshine is not none and row.sunshine > 0 else "Nie" }}</td>
+                            <td>{{ (row.humidity * 100) | round(1) }}</td>
+                            <td>{{ row.sunshine }}</td>
                             <td>{{ row.wind_speed }}</td>
-                            <td>{{ row.wind_direction }}</td>
+                            <td>{{ row.precipitation }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -356,7 +355,7 @@
                     title: 'Czas'
                 },
                 yaxis: {
-                    title: 'Prędkość Wiatru (m/s)'
+                    title: 'Prędkość Wiatru (km/h)'
                 }
             };
 

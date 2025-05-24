@@ -33,14 +33,13 @@ def init_db():
         CREATE TABLE IF NOT EXISTS measurements (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             mac_address TEXT NOT NULL,
-            server_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            server_timestamp TIMESTAMP,
             temperature REAL,
             pressure REAL,
             humidity REAL,
             sunshine INTEGER,
             wind_speed REAL,
-            wind_direction TEXT,
-            rain_intensity_percent REAL            
+            precipitation REAL            
         )
     ''')
     conn.commit()
@@ -116,10 +115,9 @@ def save_measurement(data):
                     pressure,
                     humidity,
                     sunshine,
-                    wind_speed,
-                    wind_direction, 
-                    rain_intensity_percent                  
-                ) VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?)
+                    wind_speed, 
+                    precipitation                  
+                ) VALUES (?, datetime(CURRENT_TIMESTAMP, '+2 hours'), ?, ?, ?, ?, ?, ?)
                 ''',
                 (\
                     data.get('mac_address'), # Use .get() for safer access
@@ -128,8 +126,7 @@ def save_measurement(data):
                     data.get('humidity'),
                     data.get('sunshine'),
                     data.get('wind_speed'),
-                    data.get('wind_direction'),
-                    data.get('rain_intensity_percent'),
+                    data.get('precipitation'),
                 )
             )
             conn.commit() # Commit the transaction
