@@ -1,0 +1,2 @@
+timestamp,predicted_weather_category,temp,rhum,pres,wspd,prcp,tsun,snow,wpgt
+2025-05-25 14:00:00,Clear/Fair,17.50,38.00,1014.00,1.81,0.00,59.92,0,2.50
