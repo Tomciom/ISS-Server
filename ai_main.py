@@ -132,15 +132,22 @@ def run_prediction(start_date_str, end_date_str):
     """
     try:
         prediction_start_date = datetime.strptime(start_date_str, '%Y-%m-%d %H:%M:%S')
-        prediction_end_date = datetime.strptime(end_date_str, '%Y-%m-%d %H:%M:%S')
+        # end_date_str jest taki sam, więc prediction_end_date = prediction_start_date
+        
+        # --- KLUCZOWA ZMIANA ---
+        # Upewniamy się, że pobieramy dane z całej godziny, którą chcemy przewidzieć.
+        # Rozszerzamy datę końcową do końca tej godziny.
+        # Np. jeśli prediction_start_date to 15:00:00, end_date będzie 15:59:59.
+        prediction_end_date = prediction_start_date.replace(minute=59, second=59)
 
+        # Ustawienia pobierania danych z buforem 48h (bez zmian)
         db_data_fetch_buffer_hours = 48
         db_data_fetch_start_date = prediction_start_date - timedelta(hours=db_data_fetch_buffer_hours)
-        db_data_fetch_end_date = prediction_end_date
+        db_data_fetch_end_date = prediction_end_date # Używamy nowej, rozszerzonej daty końcowej
         
-        # Zmieniamy nazwy zmiennych używanych w dalszej części kodu, aby pasowały
-        PREDICTION_START_DATE = prediction_start_date
-        PREDICTION_END_DATE = prediction_end_date
+        # Zmieniamy nazwy zmiennych używanych w dalszej części kodu
+        PREDICTION_START_DATE = prediction_start_date # To jest godzina, którą chcemy przewidzieć
+        PREDICTION_END_DATE = prediction_end_date     # A to jest koniec okna predykcji
         DB_DATA_FETCH_START_DATE = db_data_fetch_start_date
         DB_DATA_FETCH_END_DATE = db_data_fetch_end_date
 
@@ -663,6 +670,36 @@ def run_prediction(start_date_str, end_date_str):
         feature_engineering_duration_actual = time.time() - feature_engineering_start_time_actual
         print(f"--- Zakończono Rozszerzoną Inżynierię Cech v2 ({feature_engineering_duration_actual:.1f} sek) ---")
 
+
+        print("\n  Wypełnianie brakujących wartości (NaN) metodą 'forward fill'...")
+        # Zidentyfikuj kolumny, które mają być wypełnione. Powinny to być wszystkie wygenerowane cechy.
+        # Możemy po prostu zadziałać na całym DataFrame, ale ostrożnie.
+        # Kolumny, które nie powinny być wypełniane (jak 'year', 'coco'), zazwyczaj nie mają NaN.
+
+        # Wybieramy tylko kolumny numeryczne do wypełnienia
+        numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
+
+        # Zapamiętujemy, ile było NaN przed
+        nan_before = df[numeric_cols].isnull().sum().sum()
+
+        # Używamy forward fill, a potem back fill, aby wypełnić też ewentualne NaN na początku
+        df[numeric_cols] = df[numeric_cols].fillna(method='ffill').fillna(method='bfill')
+
+        nan_after = df[numeric_cols].isnull().sum().sum()
+        print(f"  Wypełniono {nan_before - nan_after} wartości NaN.")
+
+        # Jeśli po tym nadal są jakieś NaN (co może się zdarzyć, jeśli cała kolumna jest pusta),
+        # wypełniamy je zerem.
+        if nan_after > 0:
+            print(f"  Pozostało {nan_after} wartości NaN. Wypełniam zerami.")
+            df.fillna(0, inplace=True)
+        # --- KONIEC ETAPU IMPUTACJI ---
+
+
+        # --- FINALNE CZYSZCZENIE NaN ---
+        # Ten blok teraz powinien usuwać znacznie mniej wierszy, a idealnie wcale.
+        print("\n  Usuwanie NaN po pełnej inżynierii cech (finalne)...")
+
         # --- FINALNE CZYSZCZENIE NaN ---
         print("\n  Usuwanie NaN po pełnej inżynierii cech (finalne)...")
         rows_before_final_dropna = len(df)
@@ -780,8 +817,6 @@ def run_prediction(start_date_str, end_date_str):
         print("\n--- Etap 4: Przygotowanie Danych do Predykcji / Treningu i Testu ---")
 
         if USE_DATABASE_INPUT:
-            # Filtrujemy dane po inżynierii cech do zadanego okresu predykcji
-            # Upewnij się, że indeks jest typu datetime
             if not isinstance(df_processed_final.index, pd.DatetimeIndex):
                 df_processed_final.index = pd.to_datetime(df_processed_final.index)
 
@@ -789,10 +824,14 @@ def run_prediction(start_date_str, end_date_str):
                 (df_processed_final.index >= PREDICTION_START_DATE) &
                 (df_processed_final.index <= PREDICTION_END_DATE)
             ].copy()
+            
             print(f"  Przygotowano {len(prediction_data_df)} próbek do predykcji (z okresu {PREDICTION_START_DATE} - {PREDICTION_END_DATE}).")
+            
+            # --- KLUCZOWA ZMIANA ---
             if prediction_data_df.empty:
-                print("  BŁĄD: Brak danych w zadanym okresie predykcji po pełnym przetworzeniu. Sprawdź zakresy dat i logikę filtrowania.");
-                exit()
+                print("  INFO: Brak danych w zadanym okresie predykcji po pełnym przetworzeniu. Zwracam pusty wynik.")
+                # Zamiast exit(), zwracamy pustą listę, co jest poprawnym, pustym wynikiem.
+                return [] 
             # W trybie predykcji nie mamy `y_test_actual_str` z góry, chyba że to re-predykcja dla ewaluacji
             # Dla czystej predykcji, ewaluacja końcowa nie będzie możliwa bez rzeczywistych etykiet.
         else: # Tryb Meteostat (oryginalny podział na train/test)

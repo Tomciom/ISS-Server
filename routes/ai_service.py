@@ -16,13 +16,27 @@ def run_ai_task(task_id, start_date, end_date):
     print(f"Rozpoczynam zadanie AI: {task_id}")
     tasks[task_id]['status'] = 'RUNNING'
     try:
-        # Wywołujemy główną funkcję z naszego modułu AI
         result = ai_main.run_prediction(start_date, end_date)
-        tasks[task_id]['result'] = result
-        tasks[task_id]['status'] = 'SUCCESS'
+        
+        # --- NOWA LOGIKA OBSŁUGI WYNIKU ---
+        # Sprawdzamy, czy wynik jest słownikiem z kluczem 'error'
+        if isinstance(result, dict) and 'error' in result:
+            # Jeśli tak, to jest to błąd zwrócony przez ai_main
+            tasks[task_id]['status'] = 'FAILURE'
+            tasks[task_id]['result'] = result # Przekazujemy słownik z błędem
+        else:
+            # W przeciwnym razie, wszystko jest ok
+            tasks[task_id]['status'] = 'SUCCESS'
+            tasks[task_id]['result'] = result
+            
     except Exception as e:
+        # Ten blok złapie błędy, które nie zostały obsłużone wewnątrz run_prediction
+        import traceback
+        print(f"KRYTYCZNY błąd w wątku AI dla zadania {task_id}: {e}")
+        traceback.print_exc()
         tasks[task_id]['status'] = 'FAILURE'
-        tasks[task_id]['result'] = {'error': str(e)}
+        tasks[task_id]['result'] = {'error': 'Wystąpił nieoczekiwany błąd serwera.'}
+        
     print(f"Zakończono zadanie AI: {task_id} ze statusem {tasks[task_id]['status']}")
 
 
