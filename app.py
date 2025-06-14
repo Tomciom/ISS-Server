@@ -199,7 +199,7 @@ def create_app():
         data['mac_address'] = mac_address # Ensure the mac_address used is from the URL
 
         # required fields check
-        required = ['mac_address', 'temperature', 'pressure', 'humidity', 'sunshine', 'wind_speed', 'wind_direction', 'rain_intensity_percent']
+        required = ['mac_address', 'temperature', 'pressure', 'humidity', 'sunshine', 'wind_speed', 'precipitation']
         missing = [f for f in required if f not in data]
         if missing:
             msg = f"Missing fields in JSON: {', '.join(missing)}"
@@ -229,9 +229,6 @@ def create_app():
             db.close()
 
     return app
-
-
-
 
 if __name__ == '__main__':
     init_db()
