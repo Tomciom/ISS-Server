@@ -151,7 +151,7 @@ def save_measurement(data):
                 ''',
                 (\
                     data.get('mac_address'), # Use .get() for safer access
-                    temp,
+                    temp, 
                     data.get('pressure'),
                     data.get('humidity'),
                     data.get('sunshine'),

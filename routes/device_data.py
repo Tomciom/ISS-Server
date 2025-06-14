@@ -133,6 +133,11 @@ def device_data_by_mac(mac_address):
         # Przekazujemy wynik do szablonu pod nazwą 'measurements', aby uniknąć dużych zmian w HTML/JS.
         measurements = get_aggregated_data(mac_address, days=3)
 
+        latest_conditions = None
+        if measurements:
+            # Bierzemy ostatni element z listy jako najnowsze warunki
+            latest_conditions = measurements[-1]
+
     except sqlite3.Error as e:
         logging.error(f"Database error in device_data_by_mac: {e}")
         abort(500, description="Błąd bazy danych.")
@@ -143,7 +148,8 @@ def device_data_by_mac(mac_address):
         'device_data.html',
         mac_address=mac_address,
         username=username,
-        measurements=measurements, # Przekazujemy teraz zagregowane dane
+        measurements=measurements,
+        latest_conditions=latest_conditions
     )
 
 # Dodanie endpointu do pobierania CSV dla konkretnego MAC adresu z zabezpieczeniem

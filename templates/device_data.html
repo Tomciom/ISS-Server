@@ -178,6 +178,74 @@
             margin-bottom: 30px;
         }
 
+
+        .current-conditions-panel {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 25px;
+            margin-bottom: 25px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: left;
+        }
+
+        .current-conditions-panel h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            color: #333;
+            text-align: center;
+        }
+
+        .conditions-main {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .temp-display {
+            flex-shrink: 0;
+            text-align: center;
+        }
+
+        .temp-display .value {
+            font-size: 4em; /* Duża czcionka dla temperatury */
+            font-weight: 300;
+            color: #2ecc71; /* Zielony kolor jak na zrzucie */
+            line-height: 1;
+        }
+
+        .temp-display .label {
+            font-size: 0.9em;
+            color: #777;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Dwie równe kolumny */
+            gap: 20px;
+            width: 100%;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-item .label {
+            font-size: 0.8em;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-item .value {
+            font-size: 1.4em;
+            font-weight: 500;
+            color: #333;
+        }
+
     </style>
 </head>
 <body>
@@ -199,6 +267,37 @@
             <a href="{{ url_for('device_data.download_csv', mac_address=mac_address) }}">
                 <button>Zapisz jako CSV</button>
             </a>
+
+            {% if latest_conditions %}
+            <div class="current-conditions-panel">
+                <h2>Aktualne Warunki (Ostatnie 30 min)</h2>
+                <div class="conditions-main">
+                    <!-- Lewa strona: Duża temperatura -->
+                    <div class="temp-display">
+                        <span class="value">{{ latest_conditions.avg_temp | round(1) }}°C</span>
+                    </div>
+                    <!-- Prawa strona: Siatka z pozostałymi danymi -->
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="label">CIŚNIENIE</span>
+                            <span class="value">{{ latest_conditions.avg_pres | round(1) }} hPa</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">WILGOTNOŚĆ</span>
+                            <span class="value">{{ (latest_conditions.avg_hum * 100) | round }} %</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">WIATR (MAKS.)</span>
+                            <span class="value">{{ latest_conditions.max_wind | round(1) }} km/h</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">NASŁONECZNIENIE</span>
+                            <span class="value">{{ latest_conditions.avg_sun | round(1) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
 
             <div class="ai-panel" style="border: 1px solid #ccc; padding: 20px; margin-top: 20px; border-radius: 5px; background-color: #f9f9f9;">
                 <h2>Predykcja Pogody AI na konkretną godzinę</h2>
