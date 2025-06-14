@@ -210,40 +210,39 @@
             {# Removed rotation and acceleration plots as data is not available #}
 
 
-            <h2>Dane Pomiarowe</h2>
-            {% if measurements %} {# Check if there is data #}
+            <h2>Dane Pomiarowe (Agregacja 30-minutowa z 3 dni)</h2>
+            {% if measurements %}
             <div class="scrollable-table">
                 <table>
                     <thead>
                         <tr>
-                            <th>Timestamp Serwera</th> {# Clarified timestamp #}
-                            <th>Temperatura (°C)</th>
-                            <th>Ciśnienie (hPa)</th>
-                            <th>Wilgotność (%)</th> {# Added Humidity #}
-                            <th>Nasłonecznienie</th> {# Added Sunshine #}
-                            <th>Prędkość Wiatru (km/h)</th> {# Added Wind Speed #}
-                            <th>Opady</th> {# Added Wind Direction #}
+                            <!-- NOWE NAGŁÓWKI -->
+                            <th>Przedział Czasowy</th>
+                            <th>Średnia Temp. (°C)</th>
+                            <th>Średnie Ciśnienie (hPa)</th>
+                            <th>Średnia Wilgotność (%)</th>
+                            <th>Maks. Wiatr (km/h)</th>
+                            <th>Średnie Nasłonecznienie</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for row in measurements | reverse %}
                         <tr>
-                            <td>{{ row.server_timestamp }}</td> {# Use server_timestamp #}
-                            <td>{{ row.temperature }}</td>
-                            <td>{{ row.pressure }}</td>
-                            <td>{{ (row.humidity * 100) | round(1) }}</td>
-                            <td>{{ row.sunshine }}</td>
-                            <td>{{ row.wind_speed }}</td>
-                            <td>{{ row.precipitation }}</td>
+                            <!-- NOWE KLUCZE DANYCH -->
+                            <td>{{ row.time_window }}</td>
+                            <td>{{ row.avg_temp | round(1) }}</td>
+                            <td>{{ row.avg_pres | round(1) }}</td>
+                            <td>{{ (row.avg_hum * 100) | round(1) }}</td>
+                            <td>{{ row.max_wind | round(1) }}</td>
+                            <td>{{ row.avg_sun | round(1) }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
             {% else %}
-            {# Obsługa przypadku gdy nie ma danych #}
             <p>Brak danych pomiarowych dla tego urządzenia.</p>
-            {% endif %} {# Closing the if measurements block #}
+            {% endif %}
         </div>
     {% else %}
         {# Obsługa przypadku gdy użytkownik nie jest zalogowany #}
@@ -261,58 +260,30 @@
     {% endif %} {# Closing the if username block #}
 
     <script>
-        // Plotly plots - ensure data is available and correctly formatted
-        // Assuming 'measurements' is passed from the backend and contains the data
-        var measurements = {{ measurements | tojson }}; // Pass measurements from backend to JS
+        var measurements = {{ measurements | tojson }};
 
         if (measurements && measurements.length > 0) {
-            var timestamps = measurements.map(row => row.server_timestamp);
-            var temperatures = measurements.map(row => row.temperature);
-            var pressures = measurements.map(row => row.pressure);
-            // Add data for new plots
-            var humidities = measurements.map(row => row.humidity);
-            var windSpeeds = measurements.map(row => row.wind_speed);
+            // NOWE KLUCZE DANYCH
+            var timestamps = measurements.map(row => row.time_window);
+            var temperatures = measurements.map(row => row.avg_temp);
+            var pressures = measurements.map(row => row.avg_pres);
+            var humidities = measurements.map(row => row.avg_hum);
+            var windSpeeds = measurements.map(row => row.max_wind);
 
-
-            var temp_trace = {
-                x: timestamps,
-                y: temperatures,
-                mode: 'lines+markers',
-                type: 'scatter',
-                name: 'Temperatura'
-            };
 
             var temp_layout = {
-                title: 'Wykres Temperatury',
-                xaxis: {
-                    title: 'Czas'
-                },
-                yaxis: {
-                    title: 'Temperatura (°C)'
-                }
+                title: 'Wykres Średniej Temperatury (30 min)', // Zaktualizowany tytuł
+                xaxis: { title: 'Czas' },
+                yaxis: { title: 'Temperatura (°C)' }
             };
-
-            Plotly.newPlot('temperature-plot', [temp_trace], temp_layout);
-
-            var pressure_trace = {
-                x: timestamps,
-                y: pressures,
-                mode: 'lines+markers',
-                type: 'scatter',
-                name: 'Ciśnienie'
-            };
+            Plotly.newPlot('temperature-plot', [{ x: timestamps, y: temperatures, mode: 'lines+markers', name: 'Temperatura' }], temp_layout);
 
             var pressure_layout = {
-                title: 'Wykres Ciśnienia',
-                xaxis: {
-                    title: 'Czas'
-                },
-                yaxis: {
-                    title: 'Ciśnienie (hPa)'
-                }
+                title: 'Wykres Średniego Ciśnienia (30 min)', // Zaktualizowany tytuł
+                xaxis: { title: 'Czas' },
+                yaxis: { title: 'Ciśnienie (hPa)' }
             };
-
-            Plotly.newPlot('pressure-plot', [pressure_trace], pressure_layout);
+            Plotly.newPlot('pressure-plot', [{ x: timestamps, y: pressures, mode: 'lines+markers', name: 'Ciśnienie' }], pressure_layout);
 
             // Add new plots
             var humidity_trace = {

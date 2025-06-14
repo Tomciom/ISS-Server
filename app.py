@@ -104,7 +104,8 @@ def save_measurement(data):
     """
     # --- NOWA SEKCJA: WALIDACJA DANYCH ---
     try:
-        temp = float(data.get('temperature'))
+        raw_temp = float(data.get('temperature'))
+        temp = raw_temp + 2.0
         pressure = float(data.get('pressure'))
         humidity = float(data.get('humidity'))
 
@@ -150,7 +151,7 @@ def save_measurement(data):
                 ''',
                 (\
                     data.get('mac_address'), # Use .get() for safer access
-                    data.get('temperature'),
+                    temp,
                     data.get('pressure'),
                     data.get('humidity'),
                     data.get('sunshine'),
