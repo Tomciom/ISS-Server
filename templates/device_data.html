@@ -261,7 +261,12 @@
 
         <div class="content">
             {# Updated title to show MAC address #}
-            <h1>Szczegóły Urządzenia {{ mac_address }}</h1>
+            <h1>Szczegóły Urządzenia {{ board_name }}</h1>
+            <p style="text-align: center; margin-top: -20px; color: #888; font-size: 0.9em;">
+                (MAC: {{ mac_address }})
+            </p>
+
+            {# Display the board name and MAC address #}
 
             {# Update the download link to use the new route and mac_address #}
             <a href="{{ url_for('device_data.download_csv', mac_address=mac_address) }}">

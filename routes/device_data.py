@@ -125,8 +125,25 @@ def device_data_by_mac(mac_address):
             abort(404, description="Użytkownik nie znaleziony.")
         user_id = user_row['id']
         cur.execute("SELECT COUNT(*) FROM user_boards WHERE user_id = ? AND mac_address = ?", (user_id, mac_address))
+        
         if cur.fetchone()[0] == 0:
             abort(403, description="To urządzenie nie jest przypisane do Twojego konta.")
+
+        cur.execute("""
+            SELECT board_name FROM user_boards 
+            WHERE user_id = ? AND mac_address = ?
+        """, (user_id, mac_address))
+        
+        board_row = cur.fetchone()
+        
+        # 3. Obsłuż przypadki
+        if board_row is None:
+            # Jeśli nie znaleziono wiersza, użytkownik nie ma dostępu. Przerywamy.
+            abort(403, description="To urządzenie nie jest przypisane do Twojego konta.")
+        
+        # Jeśli dotarliśmy tutaj, to znaczy, że board_row istnieje.
+        # Teraz sprawdzamy, czy nazwa wewnątrz niego nie jest pusta (NULL).
+        board_name = board_row['board_name']
 
         # NOWA CZĘŚĆ: Zamiast pobierać wszystkie pomiary, pobieramy zagregowane dane
         # Używamy funkcji zdefiniowanej w poprzednim kroku.
@@ -147,6 +164,7 @@ def device_data_by_mac(mac_address):
     return render_template(
         'device_data.html',
         mac_address=mac_address,
+        board_name=board_name,
         username=username,
         measurements=measurements,
         latest_conditions=latest_conditions
