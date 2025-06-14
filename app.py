@@ -1,4 +1,4 @@
-from routes import home, journey_history, latest_journey, login, register, journey_details, boards, device_data
+from routes import home, login, register, boards, device_data
 from flask import Flask, jsonify, request, g
 import config
 import sqlite3
@@ -146,9 +146,6 @@ def create_app():
     # register blueprints
     app.register_blueprint(boards.bp)
     app.register_blueprint(home.bp)
-    app.register_blueprint(journey_history.bp)
-    app.register_blueprint(journey_details.bp)
-    app.register_blueprint(latest_journey.bp)
     app.register_blueprint(login.bp)
     app.register_blueprint(register.bp)
     app.register_blueprint(device_data.bp)

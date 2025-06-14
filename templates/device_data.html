@@ -187,12 +187,6 @@
                 <a href="{{ url_for('home.home') }}">Strona Główna</a>
                 {# Assuming boards route is named boards.boards_route #}
                 <a href="{{ url_for('boards.boards', username=username) }}">Twoje Urządzenia</a> {# Zmieniono z boards.boards na boards.boards_route dla spójności z poprzednim krokiem #}
-                {# USUNIĘTY LINK DO DANYCH OSTATNIEGO URZĄDZENIA #}
-                {# <a href="{{ url_for('latest_device_data.latest_device_data_route')}}">Dane ostatniego urządzenia</a> #}
-                {# Removed journey/new_journey link #}
-                {# <a href="{{ url_for('new_journey.new_journey') }}">Nowa Podróż</a> #}
-                {# Removed journey_history link - boards list might serve this purpose #}
-                {# <a href="{{ url_for('journey_history.journey_history') }}">Historia Pomiarów?</a> #}
             </div>
             <a href="{{ url_for('login.logout') }}">Wyloguj</a>
         </div>
