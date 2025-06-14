@@ -202,6 +202,30 @@ def download_csv(mac_address):
 
     except sqlite3.Error as e:
         logging.error(f"Database error in download_csv during authorization or fetch: {e}")
-        abort(500, description="Błąd bazy danych podczas generowania pliku CSV.")
+        abort(500, description="Błąd bazy danych podczas generowania pliku CSV.") 
 
     # Połączenie z bazą danych zostanie automatycznie zamknięte przez bp.teardown_appcontext
+
+@bp.route('/api/device_data/<mac_address>/available_dates', methods=['GET'])
+def get_available_dates(mac_address):
+    """Zwraca listę unikalnych dni (YYYY-MM-DD), dla których istnieją pomiary."""
+    if 'username' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        # Zapytanie grupujące po dacie i zwracające unikalne dni
+        cur.execute("""
+            SELECT DISTINCT strftime('%Y-%m-%d', server_timestamp) as date
+            FROM measurements
+            WHERE mac_address = ?
+            ORDER BY date DESC
+        """, (mac_address,))
+        
+        # Zwracamy listę stringów z datami
+        dates = [row['date'] for row in cur.fetchall()]
+        return jsonify(dates)
+    except Exception as e:
+        logging.error(f"Błąd podczas pobierania dostępnych dat dla {mac_address}: {e}")
+        return jsonify({'error': 'Internal server error'}), 500

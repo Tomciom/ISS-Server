@@ -1,4 +1,4 @@
-from routes import home, login, register, boards, device_data
+from routes import home, login, register, boards, device_data, ai_service
 from flask import Flask, jsonify, request, g
 import config
 import sqlite3
@@ -179,6 +179,7 @@ def create_app():
     app.register_blueprint(login.bp)
     app.register_blueprint(register.bp)
     app.register_blueprint(device_data.bp)
+    app.register_blueprint(ai_service.bp)
 
     @app.route('/<username>/add_device/<mac_address>', methods=['GET'])
     def add_device(username, mac_address):
