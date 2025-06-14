@@ -1,7 +1,9 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
+import sqlite3
 import threading
 import uuid
 import ai_main  # Importujemy nasz zrefaktoryzowany skrypt AI
+from datetime import datetime, timedelta
 
 bp = Blueprint('ai_service', __name__, url_prefix='/api/ai')
 
@@ -22,6 +24,61 @@ def run_ai_task(task_id, start_date, end_date):
         tasks[task_id]['status'] = 'FAILURE'
         tasks[task_id]['result'] = {'error': str(e)}
     print(f"Zakończono zadanie AI: {task_id} ze statusem {tasks[task_id]['status']}")
+
+
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect('measurements.db')
+    return db
+
+@bp.route('/check_data_availability', methods=['POST'])
+def check_data_availability():
+    data = request.get_json()
+    if not data or 'target_timestamp' not in data:
+        return jsonify({'error': 'Missing target_timestamp'}), 400
+
+    try:
+        target_dt = datetime.strptime(data['target_timestamp'], '%Y-%m-%d %H:%M:%S')
+        start_check_dt = target_dt - timedelta(hours=48)
+        
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # --- ZMIANA 1: SPRAWDZENIE DANYCH DLA WYBRANEJ GODZINY ---
+        # Sprawdzamy, czy istnieje jakikolwiek pomiar w godzinie, którą chcemy przewidzieć.
+        # Tworzymy okno czasowe od HH:00:00 do HH:59:59.
+        target_hour_start = target_dt.strftime('%Y-%m-%d %H:00:00')
+        target_hour_end = target_dt.strftime('%Y-%m-%d %H:59:59')
+        
+        cur.execute("""
+            SELECT 1 FROM measurements WHERE server_timestamp BETWEEN ? AND ? LIMIT 1
+        """, (target_hour_start, target_hour_end))
+        
+        has_data_for_target_hour = cur.fetchone() is not None
+        
+        if not has_data_for_target_hour:
+            return jsonify({'available': False, 'reason': 'Brak danych dla wybranej godziny.'})
+
+        # --- ZMIANA 2: SPRAWDZENIE DANYCH HISTORYCZNYCH ---
+        # Ta logika pozostaje, ale teraz wiemy, że godzina docelowa ma dane.
+        cur.execute("""
+            SELECT COUNT(DISTINCT strftime('%Y-%m-%d %H', server_timestamp))
+            FROM measurements
+            WHERE server_timestamp BETWEEN ? AND ?
+        """, (start_check_dt.strftime('%Y-%m-%d %H:%M:%S'), target_dt.strftime('%Y-%m-%d %H:%M:%S')))
+        
+        hours_with_data = cur.fetchone()[0]
+        
+        is_available = hours_with_data > 38 # Wymagamy danych z ~80% okresu 48h
+        
+        reason = "Dane dostępne." if is_available else "Niewystarczająca ilość danych historycznych (48h)."
+        
+        return jsonify({'available': is_available, 'reason': reason})
+
+    except Exception as e:
+        print(f"Błąd w check_data_availability: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 @bp.route('/predict', methods=['POST'])
 def start_prediction():

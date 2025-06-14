@@ -200,6 +200,35 @@
                 <button>Zapisz jako CSV</button>
             </a>
 
+            <div class="ai-panel" style="border: 1px solid #ccc; padding: 20px; margin-top: 20px; border-radius: 5px; background-color: #f9f9f9;">
+                <h2>Predykcja Pogody AI na konkretną godzinę</h2>
+                <p>Wybierz dzień i godzinę. System sprawdzi, czy dostępne są dane z 48 godzin wstecz, aby wygenerować predykcję.</p>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="target-day-select">Wybierz dzień:</label>
+                    <select id="target-day-select" name="target_day"></select>
+                    
+                    <label for="target-hour-select" style="margin-left: 20px;">Wybierz godzinę:</label>
+                    <select id="target-hour-select" name="target_hour">
+                        <!-- Godziny zostaną wypełnione przez JS -->
+                    </select>
+                </div>
+
+                <button id="run-ai-btn" disabled>Sprawdź dostępność i uruchom analizę</button>
+                
+                <div id="ai-status" style="margin-top: 15px; font-weight: bold;"></div>
+                
+                <div id="ai-results-container" style="margin-top: 20px; display: none;">
+                    <h3>Wynik Predykcji:</h3>
+                    <!-- Zmieniamy tabelę na prostszy kontener, bo mamy tylko jeden wynik -->
+                    <div id="prediction-result" style="display: flex; align-items: center; font-size: 1.2em;">
+                        <span id="prediction-timestamp"></span>: 
+                        <strong id="prediction-category"></strong>
+                        <img id="prediction-icon" src="" alt="prediction" style="width: 32px; height: 32px; margin-left: 15px;">
+                    </div>
+                </div>
+            </div>
+
             <h2>Wykresy</h2>
             {# Only Temperature and Pressure plots available with current schema #}
             <div class="plot-row">
@@ -335,6 +364,193 @@
             // You might want to display a message to the user on the page
         }
 
+        const weatherIconMap = {
+            'Clear/Fair': 'sunny',
+            'Cloudy/Overcast': 'cloudy',
+            'Fog': 'fog',
+            'Rain': 'rain',
+            'Snow/Sleet/Freezing': 'snow',
+            'Thunderstorm/Severe': 'thunderstorm',
+            'default': 'question_mark'
+        };
+
+        const daySelect = document.getElementById('target-day-select');
+        const hourSelect = document.getElementById('target-hour-select');
+        const runBtn = document.getElementById('run-ai-btn');
+        const statusDiv = document.getElementById('ai-status');
+
+        // Funkcja do wypełnienia selektora godzin
+        function populateHourSelector() {
+            for (let i = 0; i < 24; i++) {
+                const hour = i.toString().padStart(2, '0'); // Format 00, 01, 02...
+                const option = new Option(`${hour}:00`, hour);
+                hourSelect.add(option);
+            }
+        }
+
+        // Funkcja do wypełnienia selektora dni
+        async function populateDaySelector() {
+            const macAddress = '{{ mac_address }}';
+            try {
+                const response = await fetch(`/api/device_data/${macAddress}/available_dates`);
+                if (!response.ok) throw new Error('Nie udało się pobrać dostępnych dat.');
+                const dates = await response.json();
+                
+                if (dates.length === 0) {
+                    document.querySelector('.ai-panel p').textContent = 'Brak danych w bazie do przeprowadzenia analizy.';
+                    return;
+                }
+
+                dates.forEach(date => {
+                    daySelect.add(new Option(date, date));
+                });
+                
+                // Po wypełnieniu, od razu sprawdź dostępność dla domyślnej wartości
+                checkAvailability();
+
+            } catch (error) {
+                statusDiv.textContent = `Błąd: ${error.message}`;
+                statusDiv.style.color = 'red';
+            }
+        }
+
+        // Funkcja sprawdzająca, czy można uruchomić AI
+        async function checkAvailability() {
+            const selectedDay = daySelect.value;
+            const selectedHour = hourSelect.value;
+            
+            if (!selectedDay || !selectedHour) return;
+
+            const targetTimestamp = `${selectedDay} ${selectedHour}:00:00`;
+            statusDiv.textContent = 'Sprawdzanie dostępności danych...';
+            runBtn.disabled = true;
+
+            const response = await fetch('/api/ai/check_data_availability', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ target_timestamp: targetTimestamp })
+            });
+            const data = await response.json();
+
+            if (data.available) {
+                statusDiv.textContent = 'Dane dostępne. Gotowy do uruchomienia analizy.';
+                statusDiv.style.color = 'green';
+                runBtn.disabled = false;
+            } else {
+                statusDiv.textContent = 'Niewystarczająca ilość danych historycznych (48h) dla wybranej godziny.';
+                statusDiv.style.color = 'orange';
+                runBtn.disabled = true;
+            }
+        }
+
+        // Funkcja uruchamiająca predykcję (teraz prostsza)
+        async function startAiPrediction() {
+            const selectedDay = daySelect.value;
+            const selectedHour = hourSelect.value;
+            const targetTimestamp = `${selectedDay} ${selectedHour}:00:00`;
+            
+            // UI
+            statusDiv.textContent = 'Inicjowanie analizy...';
+            statusDiv.style.color = 'black';
+            runBtn.disabled = true;
+            document.getElementById('ai-results-container').style.display = 'none';
+
+            try {
+                const response = await fetch('/api/ai/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        start_date: targetTimestamp, // start_date i end_date są takie same
+                        end_date: targetTimestamp
+                    })
+                });
+                if (!response.ok) throw new Error('Błąd serwera przy starcie zadania.');
+                const data = await response.json();
+                statusDiv.textContent = 'Analiza w toku...';
+                pollTaskStatus(data.task_id); // Funkcja pollTaskStatus pozostaje bez zmian
+            } catch (error) {
+                statusDiv.textContent = `Błąd: ${error.message}`;
+                statusDiv.style.color = 'red';
+                runBtn.disabled = false;
+            }
+        }
+
+        // Funkcja do wyświetlania wyniku (teraz prostsza, bo jest tylko jeden)
+        function displayAiResult(result) {
+            const resultsContainer = document.getElementById('ai-results-container');
+            console.log('Otrzymano wynik do wyświetlenia:', result); // Dodaj logowanie
+
+            if (!result || !Array.isArray(result) || result.length === 0) {
+                console.error("Otrzymano pusty lub nieprawidłowy wynik:", result);
+                document.getElementById('ai-status').textContent = 'Otrzymano pusty wynik z serwera.';
+                document.getElementById('ai-status').style.color = 'orange';
+                resultsContainer.style.display = 'none'; // Ukryj kontener
+                return;
+            }
+            
+            // Pokaż kontener z wynikami
+            resultsContainer.style.display = 'block';
+
+            const prediction = result[0]; // Bierzemy pierwszy (i jedyny) element z listy
+            const category = prediction.predicted_category;
+            const iconName = weatherIconMap[category] || weatherIconMap['default'];
+            const iconPath = `{{ url_for('static', filename='img/') }}${iconName}.png`;
+
+            document.getElementById('prediction-timestamp').textContent = prediction.timestamp;
+            document.getElementById('prediction-category').textContent = category;
+            document.getElementById('prediction-icon').src = iconPath;
+            document.getElementById('prediction-icon').alt = category;
+            document.getElementById('prediction-icon').title = category;
+        }
+
+        // Funkcja pollTaskStatus musi zostać lekko zmodyfikowana, by wywoływać displayAiResult
+        function pollTaskStatus(taskId) {
+            const statusInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/ai/predict/status/${taskId}`);
+                    const data = await response.json();
+                    const statusDiv = document.getElementById('ai-status');
+                    const runBtn = document.getElementById('run-ai-btn');
+
+                    console.log('Sprawdzanie statusu zadania:', data); // Dodaj logowanie do konsoli przeglądarki!
+
+                    if (data.status === 'SUCCESS') {
+                        clearInterval(statusInterval); // Zatrzymaj odpytywanie
+                        statusDiv.textContent = 'Analiza zakończona sukcesem!';
+                        statusDiv.style.color = 'green';
+                        runBtn.disabled = false;
+                        displayAiResult(data.result); // <<<--- POPRAWKA: Upewnij się, że wywołujesz poprawną funkcję
+                    } else if (data.status === 'FAILURE') {
+                        clearInterval(statusInterval);
+                        statusDiv.textContent = `Analiza zakończyła się błędem: ${data.result.error}`;
+                        statusDiv.style.color = 'red';
+                        runBtn.disabled = false;
+                        console.error('Błąd zadania AI:', data.result);
+                    }
+                    // Jeśli status to PENDING lub RUNNING, nic nie rób i czekaj na następne sprawdzenie.
+                    // statusDiv.textContent = 'Analiza w toku...'; // Można dodać odświeżanie statusu
+
+                } catch (error) {
+                    clearInterval(statusInterval);
+                    document.getElementById('ai-status').textContent = 'Błąd komunikacji z serwerem podczas sprawdzania statusu.';
+                    document.getElementById('ai-status').style.color = 'red';
+                    document.getElementById('run-ai-btn').disabled = false;
+                    console.error('Błąd fetch w pollTaskStatus:', error);
+                }
+            }, 3000); // Sprawdzaj co 3 sekundy
+        }
+
+
+        // Event Listeners
+        daySelect.addEventListener('change', checkAvailability);
+        hourSelect.addEventListener('change', checkAvailability);
+        runBtn.addEventListener('click', startAiPrediction);
+
+        // Inicjalizacja
+        document.addEventListener('DOMContentLoaded', () => {
+            populateHourSelector();
+            populateDaySelector(); // To asynchronicznie wywoła pierwsze checkAvailability
+        });
 
     </script>
 </body>
