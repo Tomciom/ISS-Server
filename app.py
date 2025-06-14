@@ -100,6 +100,35 @@ def save_mac_to_db(username, mac_address):
 # save measurement record
 def save_measurement(data):
     """
+    Validates and saves a measurement record to the measurements table.
+    """
+    # --- NOWA SEKCJA: WALIDACJA DANYCH ---
+    try:
+        temp = float(data.get('temperature'))
+        pressure = float(data.get('pressure'))
+        humidity = float(data.get('humidity'))
+
+        # Sprawdzanie temperatury
+        if not (-40 < temp < 40): # Realistyczny zakres dla Polski/Europy
+            logging.warning(f"Odrzucono nierealistyczną temperaturę: {temp}°C dla MAC: {data.get('mac_address')}")
+            return # Zakończ funkcję, nie zapisuj danych
+
+        # Sprawdzanie ciśnienia (w hPa)
+        if not (950 < pressure < 1060):
+            logging.warning(f"Odrzucono nierealistyczne ciśnienie: {pressure} hPa dla MAC: {data.get('mac_address')}")
+            return
+
+        # Sprawdzanie wilgotności (wartość od 0.0 do 1.0)
+        if not (0 <= humidity <= 1):
+             logging.warning(f"Odrzucono nierealistyczną wilgotność: {humidity} dla MAC: {data.get('mac_address')}")
+             return
+
+    except (ValueError, TypeError):
+        logging.warning(f"Odrzucono pomiar z powodu błędu konwersji danych na liczby. Dane: {data}")
+        return
+    # --- KONIEC SEKCJI WALIDACJI ---
+
+    """
     Saves a measurement record to the measurements table.
     """
     try:
