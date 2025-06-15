@@ -356,6 +356,7 @@
                             <th>Średnia Wilgotność (%)</th>
                             <th>Poryw Wiatru (km/h)</th>
                             <th>Średnie Nasłonecznienie</th>
+                            <th>Maks. Opady (%)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -368,6 +369,7 @@
                             <td>{{ (row.avg_hum * 100) | round(1) }}</td>
                             <td>{{ row.max_wind | round(1) }}</td>
                             <td>{{ row.avg_sun | round(1) }}</td>
+                            <td>{{ row.max_perc | round(1) }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>

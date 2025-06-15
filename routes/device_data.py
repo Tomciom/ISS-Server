@@ -68,7 +68,8 @@ def get_aggregated_data(mac_address, days=3):
             AVG(pressure) as avg_pres,
             AVG(humidity) as avg_hum,
             MAX(wind_speed) as max_wind,
-            AVG(sunshine) as avg_sun
+            AVG(sunshine) as avg_sun,
+            MAX(precipitation) as max_perc
         FROM
             measurements
         WHERE
@@ -199,7 +200,7 @@ def download_csv(mac_address):
         # Jeśli dotarliśmy tutaj, użytkownik jest zalogowany I posiada to urządzenie
         # 4. Pobranie wszystkich pomiarów dla tego mac_address (istniejąca logika)
         cur.execute(
-            "SELECT server_timestamp, temperature, pressure, humidity, sunshine, wind_speed FROM measurements WHERE mac_address = ? ORDER BY server_timestamp",
+            "SELECT server_timestamp, temperature, pressure, humidity, sunshine, wind_speed, precipitation FROM measurements WHERE mac_address = ? ORDER BY server_timestamp",
             (mac_address,)
         )
         all_measurements = cur.fetchall()
@@ -211,7 +212,7 @@ def download_csv(mac_address):
         # 5. Konwersja danych na CSV i zwrócenie odpowiedzi (istniejąca logika)
         df = pd.DataFrame(all_measurements, columns=[
             'Timestamp', 'Temperatura (°C)', 'Ciśnienie (hPa)', 'Wilgotność (%)',
-            'Wykryto Światło (Surowa Wartość)', 'Prędkość Wiatru (m/s)',
+            'Wykryto Światło (Surowa Wartość)', 'Prędkość Wiatru (m/s)', 'Opady (%)'
         ])
 
         csv_buffer = BytesIO()
