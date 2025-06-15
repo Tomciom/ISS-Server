@@ -112,5 +112,7 @@ Projekt jest dystrybuowany na licencji MIT. Zobacz plik `LICENSE`, aby uzyskać 
 ## Autorzy
 
 **Tomasz Madeja** - [Tomciom](https://github.com/Tomciom)
+
 **Michał Krzempek** - [miskrz0421](https://github.com/miskrz0421)
+
 **Kacper Machnik** - [KacperMachnik](https://github.com/KacperMachnik)
